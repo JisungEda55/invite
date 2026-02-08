@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple Event - Special Invitation</title>
+    <style>
+        /* 1. 기본 스타일 설정 */
+        :root {
+            --bg-color: #000;
+            --text-color: #f5f5f7;
+            --accent-color: #a1a1a6;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 2. 배경 캔버스 (글로우 효과) */
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            filter: blur(60px);
+            opacity: 0.6;
+        }
+
+        /* 3. 메인 컨텐츠 레이아웃 */
+        .container {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* 4. 애플 로고 (SVG & 애니메이션) */
+        .logo-wrapper {
+            position: relative;
+            width: 120px;
+            height: 140px;
+            margin-bottom: 30px;
+            animation: fadeInScale 1.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .apple-logo {
+            fill: url(#appleGradient);
+            filter: drop-shadow(0 0 20px rgba(255,255,255,0.3));
+        }
+
+        /* 5. 타이포그래피 */
+        h1 {
+            font-size: 56px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            margin: 0;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation-delay: 0.5s;
+        }
+
+        p {
+            font-size: 24px;
+            color: var(--accent-color);
+            margin: 0;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation-delay: 0.7s;
+        }
+
+        .details {
+            margin-top: 40px;
+            font-size: 18px;
+            font-weight: 500;
+            opacity: 0;
+            animation: fadeIn 1.5s ease forwards;
+            animation-delay: 1.2s;
+        }
+
+        /* 6. 인터랙티브 버튼 */
+        .cta-button {
+            margin-top: 30px;
+            padding: 12px 28px;
+            border-radius: 980px;
+            background: var(--text-color);
+            color: #000;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeIn 1.5s ease forwards;
+            animation-delay: 1.4s;
+        }
+
+        .cta-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255,255,255,0.4);
+        }
+
+        /* 7. 애니메이션 정의 */
+        @keyframes fadeInScale {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas"></canvas>
+
+    <div class="container">
+        <div class="logo-wrapper">
+            <svg viewBox="0 0 512 512" class="apple-logo">
+                <defs>
+                    <linearGradient id="appleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#fff;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#a1a1a6;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#fff;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <path d="M323.5 123.5c-27.3 0-58.4 17.5-76.1 17.5-17.7 0-45.1-17.5-67.5-17.5-30 0-82.7 23.3-82.7 101.4 0 71.3 46.5 162.2 101.3 162.2 24.6 0 44.5-14.7 68.9-14.7 24.4 0 41.5 14.7 68.9 14.7 54.8 0 101.3-90.9 101.3-162.2 0-78.1-52.7-101.4-82.7-101.4zM247.4 121c3.1-41.5 30.5-73.4 67.3-73.4 2.8 0 5.6.3 8.3.9 3.5 37.8-24.7 72.8-67.3 72.8-2.8 0-5.6-.2-8.3-.3z"/>
+            </svg>
+        </div>
+
+        <h1>It's Glowtime.</h1>
+        <p>새로운 시대의 시작.</p>
+
+        <div class="details">
+            2026년 2월 8일 오전 10시(PDT)<br>
+            apple.com에서 온라인으로 시청하세요.
+        </div>
+
+        <a href="#" class="cta-button">캘린더에 추가</a>
+    </div>
+
+    <script>
+        /**
+         * 8. 자바스크립트: 동적 배경 파티클 & 글로우 시스템
+         */
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let particles = [];
+
+        function init() {
+            resize();
+            createParticles();
+            animate();
+        }
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 150 + 50;
+                this.color = this.getRandomColor();
+            }
+
+            getRandomColor() {
+                const colors = [
+                    'rgba(0, 113, 227, 0.3)', // Apple Blue
+                    'rgba(94, 92, 230, 0.3)',  // Purple
+                    'rgba(255, 55, 95, 0.3)',  // Pink
+                    'rgba(255, 159, 10, 0.3)'  // Orange
+                ];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.fillStyle = this.color;
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < -this.size) this.x = width + this.size;
+                if (this.x > width + this.size) this.x = -this.size;
+                if (this.y < -this.size) this.y = height + this.size;
+                if (this.y > height + this.size) this.y = -this.size;
+            }
+        }
+
+        function createParticles() {
+            for (let i = 0; i < 8; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        // 마우스 움직임에 따른 미세한 인터랙션
+        window.addEventListener('mousemove', (e) => {
+            const moveX = (e.clientX - width / 2) * 0.01;
+            const moveY = (e.clientY - height / 2) * 0.01;
+            document.querySelector('.container').style.transform = `translate(${moveX}px, ${moveY}px)`;
+        });
+
+        window.addEventListener('resize', resize);
+        init();
+    </script>
+</body>
+</html>
