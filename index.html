@@ -3,14 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apple Event - Special Invitation</title>
+    <title>Apple Style Invite Maker</title>
     <style>
-        /* 1. 기본 스타일 설정 */
         :root {
-            --bg-color: #000;
-            --text-color: #f5f5f7;
-            --accent-color: #a1a1a6;
-            --glass-bg: rgba(255, 255, 255, 0.05);
+            --bg-black: #000000;
+            --apple-gray: #86868b;
+            --apple-blue: #0071e3;
         }
 
         body, html {
@@ -18,230 +16,175 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            overflow: hidden;
+            background-color: var(--bg-black);
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
         }
 
-        /* 2. 배경 캔버스 (글로우 효과) */
-        #canvas {
+        /* 배경 글로우 효과 */
+        .glow-bg {
             position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
+            background: radial-gradient(circle at 50% 50%, #1d1d1f 0%, #000 70%);
             z-index: 1;
-            filter: blur(60px);
-            opacity: 0.6;
         }
 
-        /* 3. 메인 컨텐츠 레이아웃 */
-        .container {
-            position: relative;
+        .ambient-light {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 113, 227, 0.15) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%;
+            filter: blur(80px);
             z-index: 2;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
+            pointer-events: none;
         }
 
-        /* 4. 애플 로고 (SVG & 애니메이션) */
-        .logo-wrapper {
+        /* 메인 카드 */
+        .invite-card {
             position: relative;
-            width: 120px;
-            height: 140px;
-            margin-bottom: 30px;
-            animation: fadeInScale 1.8s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 10;
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+            padding: 40px;
+            cursor: default;
         }
 
+        /* 로고 스타일 (애플 특유의 메탈릭 그라데이션) */
         .apple-logo {
-            fill: url(#appleGradient);
-            filter: drop-shadow(0 0 20px rgba(255,255,255,0.3));
+            width: 80px;
+            height: 100px;
+            margin-bottom: 40px;
+            fill: white;
+            filter: drop-shadow(0 0 15px rgba(255,255,255,0.4));
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        /* 5. 타이포그래피 */
+        .apple-logo:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        /* 텍스트 편집 가능 영역 */
+        .editable {
+            outline: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+            border-radius: 4px;
+        }
+
+        .editable:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .editable:focus {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.3);
+        }
+
         h1 {
-            font-size: 56px;
+            font-size: 48px;
             font-weight: 600;
             letter-spacing: -0.02em;
-            margin: 0;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            animation-delay: 0.5s;
+            margin: 0 0 10px 0;
+            background: linear-gradient(180deg, #fff 0%, #a1a1a6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        p {
+        .subtitle {
             font-size: 24px;
-            color: var(--accent-color);
-            margin: 0;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            animation-delay: 0.7s;
+            color: var(--apple-gray);
+            font-weight: 400;
+            margin-bottom: 50px;
         }
 
-        .details {
-            margin-top: 40px;
-            font-size: 18px;
-            font-weight: 500;
-            opacity: 0;
-            animation: fadeIn 1.5s ease forwards;
-            animation-delay: 1.2s;
+        .info-box {
+            font-size: 17px;
+            line-height: 1.5;
+            color: #fff;
         }
 
-        /* 6. 인터랙티브 버튼 */
-        .cta-button {
-            margin-top: 30px;
-            padding: 12px 28px;
-            border-radius: 980px;
-            background: var(--text-color);
-            color: #000;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            opacity: 0;
-            animation: fadeIn 1.5s ease forwards;
-            animation-delay: 1.4s;
-        }
+        .date { font-weight: 600; }
+        .location { color: var(--apple-gray); }
 
-        .cta-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(255,255,255,0.4);
-        }
-
-        /* 7. 애니메이션 정의 */
-        @keyframes fadeInScale {
-            0% { opacity: 0; transform: scale(0.8); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-
-        @keyframes slideUp {
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes fadeIn {
-            to { opacity: 1; }
+        /* 가이드 팁 */
+        .tip {
+            position: absolute;
+            bottom: 30px;
+            font-size: 12px;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
     </style>
 </head>
 <body>
 
-    <canvas id="canvas"></canvas>
+    <div class="glow-bg"></div>
+    <div class="ambient-light" id="light"></div>
 
-    <div class="container">
-        <div class="logo-wrapper">
-            <svg viewBox="0 0 512 512" class="apple-logo">
-                <defs>
-                    <linearGradient id="appleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#fff;stop-opacity:1" />
-                        <stop offset="50%" style="stop-color:#a1a1a6;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#fff;stop-opacity:1" />
-                    </linearGradient>
-                </defs>
-                <path d="M323.5 123.5c-27.3 0-58.4 17.5-76.1 17.5-17.7 0-45.1-17.5-67.5-17.5-30 0-82.7 23.3-82.7 101.4 0 71.3 46.5 162.2 101.3 162.2 24.6 0 44.5-14.7 68.9-14.7 24.4 0 41.5 14.7 68.9 14.7 54.8 0 101.3-90.9 101.3-162.2 0-78.1-52.7-101.4-82.7-101.4zM247.4 121c3.1-41.5 30.5-73.4 67.3-73.4 2.8 0 5.6.3 8.3.9 3.5 37.8-24.7 72.8-67.3 72.8-2.8 0-5.6-.2-8.3-.3z"/>
-            </svg>
+    <div class="invite-card">
+        <svg class="apple-logo" viewBox="0 0 512 512">
+            <path d="M323.5 123.5c-27.3 0-58.4 17.5-76.1 17.5-17.7 0-45.1-17.5-67.5-17.5-30 0-82.7 23.3-82.7 101.4 0 71.3 46.5 162.2 101.3 162.2 24.6 0 44.5-14.7 68.9-14.7 24.4 0 41.5 14.7 68.9 14.7 54.8 0 101.3-90.9 101.3-162.2 0-78.1-52.7-101.4-82.7-101.4zM247.4 121c3.1-41.5 30.5-73.4 67.3-73.4 2.8 0 5.6.3 8.3.9 3.5 37.8-24.7 72.8-67.3 72.8-2.8 0-5.6-.2-8.3-.3z"/>
+        </svg>
+
+        <h1 class="editable" contenteditable="true">Hello, AI.</h1>
+        <div class="subtitle editable" contenteditable="true">새로운 미래가 시작됩니다.</div>
+
+        <div class="info-box">
+            <div class="date editable" contenteditable="true">2026년 9월 12일 오전 10시</div>
+            <div class="location editable" contenteditable="true">Apple Park에서 온라인으로 시청하세요</div>
         </div>
-
-        <h1>It's Glowtime.</h1>
-        <p>새로운 시대의 시작.</p>
-
-        <div class="details">
-            2026년 2월 8일 오전 10시(PDT)<br>
-            apple.com에서 온라인으로 시청하세요.
-        </div>
-
-        <a href="#" class="cta-button">캘린더에 추가</a>
     </div>
 
+    <div class="tip">텍스트를 클릭하여 내용을 수정해보세요</div>
+
     <script>
-        /**
-         * 8. 자바스크립트: 동적 배경 파티클 & 글로우 시스템
-         */
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
+        const light = document.getElementById('light');
+        const card = document.querySelector('.invite-card');
 
-        let width, height;
-        let particles = [];
-
-        function init() {
-            resize();
-            createParticles();
-            animate();
-        }
-
-        function resize() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-        }
-
-        class Particle {
-            constructor() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.vx = (Math.random() - 0.5) * 0.5;
-                this.vy = (Math.random() - 0.5) * 0.5;
-                this.size = Math.random() * 150 + 50;
-                this.color = this.getRandomColor();
-            }
-
-            getRandomColor() {
-                const colors = [
-                    'rgba(0, 113, 227, 0.3)', // Apple Blue
-                    'rgba(94, 92, 230, 0.3)',  // Purple
-                    'rgba(255, 55, 95, 0.3)',  // Pink
-                    'rgba(255, 159, 10, 0.3)'  // Orange
-                ];
-                return colors[Math.floor(Math.random() * colors.length)];
-            }
-
-            draw() {
-                ctx.beginPath();
-                ctx.fillStyle = this.color;
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-
-                if (this.x < -this.size) this.x = width + this.size;
-                if (this.x > width + this.size) this.x = -this.size;
-                if (this.y < -this.size) this.y = height + this.size;
-                if (this.y > height + this.size) this.y = -this.size;
-            }
-        }
-
-        function createParticles() {
-            for (let i = 0; i < 8; i++) {
-                particles.push(new Particle());
-            }
-        }
-
-        function animate() {
-            ctx.clearRect(0, 0, width, height);
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
-            requestAnimationFrame(animate);
-        }
-
-        // 마우스 움직임에 따른 미세한 인터랙션
+        // 1. 마우스 위치에 따른 조명 효과
         window.addEventListener('mousemove', (e) => {
-            const moveX = (e.clientX - width / 2) * 0.01;
-            const moveY = (e.clientY - height / 2) * 0.01;
-            document.querySelector('.container').style.transform = `translate(${moveX}px, ${moveY}px)`;
+            const x = e.clientX;
+            const y = e.clientY;
+            
+            // 조명 이동
+            light.style.left = (x - 300) + 'px';
+            light.style.top = (y - 300) + 'px';
+
+            // 카드 미세 각도 조절 (Tilt 효과)
+            const force = 15;
+            const dx = (x - window.innerWidth / 2) / (window.innerWidth / 2);
+            const dy = (y - window.innerHeight / 2) / (window.innerHeight / 2);
+            
+            card.style.transform = `perspective(1000px) rotateX(${-dy * force}deg) rotateY(${dx * force}deg)`;
         });
 
-        window.addEventListener('resize', resize);
-        init();
+        // 2. 초기 로드 애니메이션
+        window.addEventListener('load', () => {
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.9)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 1.5s cubic-bezier(0.16, 1, 0.3, 1)';
+                card.style.opacity = '1';
+                card.style.transform = 'scale(1)';
+            }, 100);
+        });
+
+        // 3. 텍스트 수정 시 로컬 저장 (선택 사항)
+        const editables = document.querySelectorAll('.editable');
+        editables.forEach(el => {
+            el.addEventListener('input', () => {
+                // 수정 중일 때 조명 색상 변경 등 인터랙션 추가 가능
+            });
+        });
     </script>
 </body>
 </html>
