@@ -3,188 +3,249 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apple Style Invite Maker</title>
+    <title>초대장 생성기 - Apple 스타일</title>
     <style>
-        :root {
-            --bg-black: #000000;
-            --apple-gray: #86868b;
-            --apple-blue: #0071e3;
-        }
-
-        body, html {
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
             margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--bg-black);
-            color: white;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background-color: white;
+            border-radius: 18px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
-
-        /* 배경 글로우 효과 */
-        .glow-bg {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 50% 50%, #1d1d1f 0%, #000 70%);
-            z-index: 1;
-        }
-
-        .ambient-light {
-            position: absolute;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(0, 113, 227, 0.15) 0%, rgba(0,0,0,0) 70%);
-            border-radius: 50%;
-            filter: blur(80px);
-            z-index: 2;
-            pointer-events: none;
-        }
-
-        /* 메인 카드 */
-        .invite-card {
-            position: relative;
-            z-index: 10;
+        .header {
+            background-color: #0071e3;
+            color: white;
+            padding: 20px;
             text-align: center;
-            width: 90%;
-            max-width: 600px;
-            padding: 40px;
-            cursor: default;
-        }
-
-        /* 로고 스타일 (애플 특유의 메탈릭 그라데이션) */
-        .apple-logo {
-            width: 80px;
-            height: 100px;
-            margin-bottom: 40px;
-            fill: white;
-            filter: drop-shadow(0 0 15px rgba(255,255,255,0.4));
-            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-
-        .apple-logo:hover {
-            transform: scale(1.1) rotate(5deg);
-        }
-
-        /* 텍스트 편집 가능 영역 */
-        .editable {
-            outline: none;
-            transition: all 0.3s ease;
-            display: inline-block;
-            border-radius: 4px;
-        }
-
-        .editable:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .editable:focus {
-            background: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.3);
-        }
-
-        h1 {
-            font-size: 48px;
-            font-weight: 600;
-            letter-spacing: -0.02em;
-            margin: 0 0 10px 0;
-            background: linear-gradient(180deg, #fff 0%, #a1a1a6 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .subtitle {
             font-size: 24px;
-            color: var(--apple-gray);
-            font-weight: 400;
-            margin-bottom: 50px;
+            font-weight: 600;
         }
-
-        .info-box {
-            font-size: 17px;
-            line-height: 1.5;
-            color: #fff;
+        .form-section, .preview-section {
+            padding: 20px;
         }
-
-        .date { font-weight: 600; }
-        .location { color: var(--apple-gray); }
-
-        /* 가이드 팁 */
-        .tip {
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #86868b;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #0071e3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0077ed;
+        }
+        .preview {
+            background-color: #f5f5f7;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .preview::before {
+            content: "";
             position: absolute;
-            bottom: 30px;
-            font-size: 12px;
-            color: #444;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 10px solid #f5f5f7;
+        }
+        .preview h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .preview p {
+            font-size: 16px;
+            margin: 5px 0;
+            color: #1d1d1f;
+        }
+        .share-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+        #shareLink {
+            width: 100%;
+            padding: 10px;
+            background-color: #f5f5f7;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            word-break: break-all;
+        }
+        #copyButton {
+            width: auto;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
-
-    <div class="glow-bg"></div>
-    <div class="ambient-light" id="light"></div>
-
-    <div class="invite-card">
-        <svg class="apple-logo" viewBox="0 0 512 512">
-            <path d="M323.5 123.5c-27.3 0-58.4 17.5-76.1 17.5-17.7 0-45.1-17.5-67.5-17.5-30 0-82.7 23.3-82.7 101.4 0 71.3 46.5 162.2 101.3 162.2 24.6 0 44.5-14.7 68.9-14.7 24.4 0 41.5 14.7 68.9 14.7 54.8 0 101.3-90.9 101.3-162.2 0-78.1-52.7-101.4-82.7-101.4zM247.4 121c3.1-41.5 30.5-73.4 67.3-73.4 2.8 0 5.6.3 8.3.9 3.5 37.8-24.7 72.8-67.3 72.8-2.8 0-5.6-.2-8.3-.3z"/>
-        </svg>
-
-        <h1 class="editable" contenteditable="true">Hello, AI.</h1>
-        <div class="subtitle editable" contenteditable="true">새로운 미래가 시작됩니다.</div>
-
-        <div class="info-box">
-            <div class="date editable" contenteditable="true">2026년 9월 12일 오전 10시</div>
-            <div class="location editable" contenteditable="true">Apple Park에서 온라인으로 시청하세요</div>
+    <div class="container">
+        <div class="header">초대장 생성기</div>
+        
+        <div class="form-section" id="formSection">
+            <div class="form-group">
+                <label for="eventName">이벤트 이름</label>
+                <input type="text" id="eventName" placeholder="예: 생일 파티">
+            </div>
+            <div class="form-group">
+                <label for="date">날짜</label>
+                <input type="date" id="date">
+            </div>
+            <div class="form-group">
+                <label for="time">시간</label>
+                <input type="time" id="time">
+            </div>
+            <div class="form-group">
+                <label for="location">장소</label>
+                <input type="text" id="location" placeholder="예: 서울 카페">
+            </div>
+            <div class="form-group">
+                <label for="host">호스트</label>
+                <input type="text" id="host" placeholder="예: 김철수">
+            </div>
+            <div class="form-group">
+                <label for="message">메시지</label>
+                <textarea id="message" rows="4" placeholder="초대 메시지를 입력하세요..."></textarea>
+            </div>
+            <button onclick="generateInvitation()">초대장 생성</button>
+        </div>
+        
+        <div class="preview-section hidden" id="previewSection">
+            <div class="preview" id="previewContent">
+                <h2 id="previewEventName"></h2>
+                <p id="previewDateTime"></p>
+                <p id="previewLocation"></p>
+                <p id="previewHost"></p>
+                <p id="previewMessage"></p>
+            </div>
+            <div class="share-section">
+                <p>초대장 공유 링크:</p>
+                <div id="shareLink"></div>
+                <button id="copyButton" onclick="copyLink()">링크 복사</button>
+                <button onclick="resetForm()">새 초대장 만들기</button>
+            </div>
         </div>
     </div>
 
-    <div class="tip">텍스트를 클릭하여 내용을 수정해보세요</div>
-
     <script>
-        const light = document.getElementById('light');
-        const card = document.querySelector('.invite-card');
+        function generateInvitation() {
+            const eventName = document.getElementById('eventName').value;
+            const date = document.getElementById('date').value;
+            const time = document.getElementById('time').value;
+            const location = document.getElementById('location').value;
+            const host = document.getElementById('host').value;
+            const message = document.getElementById('message').value;
 
-        // 1. 마우스 위치에 따른 조명 효과
-        window.addEventListener('mousemove', (e) => {
-            const x = e.clientX;
-            const y = e.clientY;
-            
-            // 조명 이동
-            light.style.left = (x - 300) + 'px';
-            light.style.top = (y - 300) + 'px';
+            if (!eventName || !date || !time) {
+                alert('필수 항목을 입력해주세요: 이벤트 이름, 날짜, 시간');
+                return;
+            }
 
-            // 카드 미세 각도 조절 (Tilt 효과)
-            const force = 15;
-            const dx = (x - window.innerWidth / 2) / (window.innerWidth / 2);
-            const dy = (y - window.innerHeight / 2) / (window.innerHeight / 2);
-            
-            card.style.transform = `perspective(1000px) rotateX(${-dy * force}deg) rotateY(${dx * force}deg)`;
-        });
+            const data = {
+                eventName,
+                date,
+                time,
+                location,
+                host,
+                message
+            };
 
-        // 2. 초기 로드 애니메이션
-        window.addEventListener('load', () => {
-            card.style.opacity = '0';
-            card.style.transform = 'scale(0.9)';
-            
-            setTimeout(() => {
-                card.style.transition = 'all 1.5s cubic-bezier(0.16, 1, 0.3, 1)';
-                card.style.opacity = '1';
-                card.style.transform = 'scale(1)';
-            }, 100);
-        });
+            const encodedData = btoa(JSON.stringify(data)); // Base64 인코딩
+            const shareUrl = `${window.location.origin}${window.location.pathname}?data=${encodedData}`;
 
-        // 3. 텍스트 수정 시 로컬 저장 (선택 사항)
-        const editables = document.querySelectorAll('.editable');
-        editables.forEach(el => {
-            el.addEventListener('input', () => {
-                // 수정 중일 때 조명 색상 변경 등 인터랙션 추가 가능
+            // 미리보기 업데이트
+            document.getElementById('previewEventName').textContent = eventName;
+            document.getElementById('previewDateTime').textContent = `날짜: ${date} 시간: ${time}`;
+            document.getElementById('previewLocation').textContent = `장소: ${location}`;
+            document.getElementById('previewHost').textContent = `호스트: ${host}`;
+            document.getElementById('previewMessage').textContent = message;
+
+            // 공유 링크 표시
+            document.getElementById('shareLink').textContent = shareUrl;
+
+            // 섹션 전환
+            document.getElementById('formSection').classList.add('hidden');
+            document.getElementById('previewSection').classList.remove('hidden');
+        }
+
+        function copyLink() {
+            const link = document.getElementById('shareLink').textContent;
+            navigator.clipboard.writeText(link).then(() => {
+                alert('링크가 복사되었습니다!');
+            }).catch(err => {
+                alert('복사 실패: ' + err);
             });
-        });
+        }
+
+        function resetForm() {
+            document.getElementById('formSection').classList.remove('hidden');
+            document.getElementById('previewSection').classList.add('hidden');
+            document.querySelectorAll('input, textarea').forEach(el => el.value = '');
+        }
+
+        // 페이지 로드 시 URL 파라미터 확인 (공유된 초대장 보기)
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const dataParam = urlParams.get('data');
+            if (dataParam) {
+                try {
+                    const decodedData = JSON.parse(atob(dataParam));
+                    document.getElementById('previewEventName').textContent = decodedData.eventName;
+                    document.getElementById('previewDateTime').textContent = `날짜: ${decodedData.date} 시간: ${decodedData.time}`;
+                    document.getElementById('previewLocation').textContent = `장소: ${decodedData.location}`;
+                    document.getElementById('previewHost').textContent = `호스트: ${decodedData.host}`;
+                    document.getElementById('previewMessage').textContent = decodedData.message;
+
+                    document.getElementById('formSection').classList.add('hidden');
+                    document.getElementById('previewSection').classList.remove('hidden');
+                    document.getElementById('shareLink').textContent = window.location.href;
+                    document.querySelector('.share-section p').textContent = '이 초대장을 공유하세요:';
+                } catch (e) {
+                    console.error('Invalid data');
+                }
+            }
+        };
     </script>
 </body>
 </html>
