@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>요기요 배달 현황 데모</title>
+    <title>배달 데모 - 부산 서면점</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -12,13 +12,14 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <style>
-        body { font-family: 'Pretendard', sans-serif; background-color: #f8f9fa; }
+        body { font-family: 'Pretendard', sans-serif; background-color: #f1f3f5; margin: 0; }
         .yogiyo-pink { color: #FA0050; }
         .yogiyo-bg-pink { background-color: #FA0050; }
-        .progress-line { height: 4px; border-radius: 2px; transition: all 1s ease; }
-        #map { height: 280px; width: 100%; z-index: 10; }
-        .pulse { animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
+        #map { height: 320px; width: 100%; filter: grayscale(0.2) contrast(1.1); }
+        .rider-emoji { font-size: 28px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); transition: all 0.5s linear; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; transition: all 0.3s ease; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .animate-slide-up { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
     </style>
 </head>
 <body>
@@ -28,14 +29,17 @@
         const { useState, useEffect, useRef } = React;
 
         const DeliveryApp = () => {
-            // 상태 관리: 0: 조리중, 1: 배달중, 2: 거의도착, 3: 완료
+            // 부산 서면역 중심 좌표: 35.158, 129.059
+            const DEST_COORDS = [35.158, 129.059]; // 도착지 (서면역)
+            const START_COORDS = [35.153, 129.065]; // 출발지 (전포동 공차)
+
             const [step, setStep] = useState(1);
-            const [timeLeft, setTimeLeft] = useState(15 * 60); // 15분 (초 단위)
+            const [timeLeft, setTimeLeft] = useState(12 * 60);
             const [isModalOpen, setIsModalOpen] = useState(false);
             const mapRef = useRef(null);
             const riderMarkerRef = useRef(null);
 
-            // 실시간 타이머 로직
+            // 타이머 작동
             useEffect(() => {
                 const timer = setInterval(() => {
                     setTimeLeft(prev => (prev > 0 ? prev - 1 : 0));
@@ -43,201 +47,169 @@
                 return () => clearInterval(timer);
             }, []);
 
-            // 지도 및 라이더 애니메이션 로직
+            // 지도 초기화 (부산 서면)
             useEffect(() => {
                 if (!mapRef.current) {
-                    // 영통역 인근 초기 좌표
-                    const center = [37.251, 127.071];
-                    mapRef.current = L.map('map', { zoomControl: false }).setView(center, 15);
+                    mapRef.current = L.map('map', { 
+                        zoomControl: false,
+                        attributionControl: false 
+                    }).setView(START_COORDS, 15);
                     
-                    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(mapRef.current);
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(mapRef.current);
 
-                    // 목적지 마커 (영통역)
+                    // 도착지 마커 (내 위치)
                     const homeIcon = L.divIcon({
-                        html: `<div class="bg-white p-1 rounded-full shadow-lg border-2 border-pink-500"><div class="w-4 h-4 bg-pink-500 rounded-full"></div></div>`,
+                        html: `<div class="relative"><div class="absolute -top-2 -left-2 w-8 h-8 bg-pink-500/20 rounded-full animate-ping"></div><div class="bg-white p-1 rounded-full shadow-md border-2 border-pink-500 relative z-10"><div class="w-3 h-3 bg-pink-500 rounded-full"></div></div></div>`,
                         className: ''
                     });
-                    L.marker([37.252, 127.072], { icon: homeIcon }).addTo(mapRef.current);
+                    L.marker(DEST_COORDS, { icon: homeIcon }).addTo(mapRef.current);
 
                     // 라이더 마커
                     const riderIcon = L.divIcon({
-                        html: `<div class="pulse text-2xl">🛵</div>`,
+                        html: `<div class="rider-emoji">🛵</div>`,
                         className: ''
                     });
-                    riderMarkerRef.current = L.marker([37.248, 127.068], { icon: riderIcon }).addTo(mapRef.current);
+                    riderMarkerRef.current = L.marker(START_COORDS, { icon: riderIcon }).addTo(mapRef.current);
                 }
 
-                // 배달 중일 때 라이더 이동 시뮬레이션
+                // 라이더 이동 시뮬레이션 (서면역 방향으로)
                 if (step === 1) {
-                    let moveCount = 0;
+                    let progress = 0;
                     const moveInterval = setInterval(() => {
-                        moveCount += 0.0001;
-                        const newLat = 37.248 + (moveCount * 0.5);
-                        const newLng = 127.068 + (moveCount * 0.6);
-                        if (riderMarkerRef.current) {
-                            riderMarkerRef.current.setLatLng([newLat, newLng]);
+                        progress += 0.005;
+                        if (progress <= 1) {
+                            const currentLat = START_COORDS[0] + (DEST_COORDS[0] - START_COORDS[0]) * progress;
+                            const currentLng = START_COORDS[1] + (DEST_COORDS[1] - START_COORDS[1]) * progress;
+                            riderMarkerRef.current.setLatLng([currentLat, currentLng]);
                         }
-                    }, 2000);
+                    }, 1000);
                     return () => clearInterval(moveInterval);
                 }
             }, [step]);
 
-            const formatTime = (seconds) => {
-                const m = Math.floor(seconds / 60);
-                const s = seconds % 60;
-                return `${m}:${s < 10 ? '0' : ''}${s}`;
-            };
-
             const getArrivalLabel = () => {
                 const now = new Date();
                 now.setSeconds(now.getSeconds() + timeLeft);
-                return `오후 ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')} 도착 예정`;
+                const hours = now.getHours() > 12 ? `오후 ${now.getHours()-12}` : `오전 ${now.getHours()}`;
+                return `${hours}:${String(now.getMinutes()).padStart(2, '0')} 도착 예정`;
             };
 
             return (
-                <div className="max-w-[450px] mx-auto bg-white min-h-screen shadow-2xl relative overflow-x-hidden">
-                    {/* 상단 네비바 */}
-                    <div className="sticky top-0 bg-white z-50 p-4 flex items-center justify-between border-b">
-                        <button className="text-gray-800"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg></button>
-                        <h2 className="font-bold">배달 현황</h2>
-                        <div className="w-6"></div>
-                    </div>
+                <div className="max-w-[480px] mx-auto bg-white min-h-screen shadow-xl relative flex flex-col">
+                    {/* 상단바 */}
+                    <header className="p-4 flex items-center border-b sticky top-0 bg-white z-[1001]">
+                        <button className="p-1 text-gray-700"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7"></path></svg></button>
+                        <h1 className="flex-1 text-center font-bold text-lg pr-8">주문 현황</h1>
+                    </header>
 
-                    {/* 배달 상태 요약 */}
-                    <div className="p-6">
-                        <div className="flex justify-between items-start mb-6">
-                            <div>
-                                <div className="flex items-center space-x-2 mb-1">
-                                    <span className="bg-gray-100 text-[11px] px-2 py-0.5 rounded-full text-gray-600 font-medium border">실속배달</span>
-                                    {step === 1 && <span className="bg-pink-50 text-pink-600 text-[11px] px-2 py-0.5 rounded-full font-bold">실시간 이동중</span>}
-                                </div>
-                                <h1 className="text-2xl font-extrabold tracking-tight">{getArrivalLabel()}</h1>
-                                <p className="text-gray-500 text-sm mt-1">
-                                    {step === 0 && "매장에서 열심히 음식을 만들고 있어요."}
-                                    {step === 1 && "라이더님이 안전하게 배달 중이에요."}
-                                    {step >= 2 && "거의 다 왔어요! 도착 알림을 확인해주세요."}
+                    {/* 상태 정보 */}
+                    <section className="p-6">
+                        <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded bg-gray-100 text-[11px] font-bold text-gray-600">실속배달</span>
+                                <h2 className="text-2xl font-black tracking-tight">{getArrivalLabel()}</h2>
+                                <p className="text-gray-500 text-sm font-medium">
+                                    {step === 0 ? "정성껏 음식을 준비하고 있어요" : "라이더님이 서면역 인근에서 이동 중입니다"}
                                 </p>
                             </div>
-                            <div className="text-4xl animate-bounce">
-                                {step === 0 ? "👨‍🍳" : "🛵"}
+                            <div className="w-14 h-14 bg-pink-50 rounded-2xl flex items-center justify-center text-3xl">
+                                {step === 0 ? "🍳" : "🛵"}
                             </div>
                         </div>
 
                         {/* 프로그레스 스텝 */}
-                        <div className="relative pt-2">
-                            <div className="flex justify-between text-[11px] text-gray-400 mb-3 px-1">
-                                <span className={step >= 0 ? "text-pink-600 font-bold" : ""}>주문완료</span>
-                                <span className={step >= 0 ? "text-pink-600 font-bold" : ""}>조리중</span>
-                                <span className={step >= 1 ? "text-pink-600 font-bold" : ""}>배달중</span>
-                                <span className={step >= 3 ? "text-pink-600 font-bold" : ""}>배달완료</span>
-                            </div>
-                            <div className="flex gap-1.5">
-                                <div className={`flex-1 progress-line ${step >= 0 ? 'yogiyo-bg-pink' : 'bg-gray-100'}`}></div>
-                                <div className={`flex-1 progress-line ${step >= 0 ? 'yogiyo-bg-pink' : 'bg-gray-100'}`}></div>
-                                <div className={`flex-1 progress-line ${step >= 1 ? 'yogiyo-bg-pink' : 'bg-gray-100'}`}></div>
-                                <div className={`flex-1 progress-line ${step >= 3 ? 'yogiyo-bg-pink' : 'bg-gray-100'}`}></div>
-                            </div>
+                        <div className="mt-8 flex items-center justify-between px-2">
+                            {['주문완료', '조리중', '배달중', '완료'].map((label, idx) => (
+                                <div key={label} className="flex flex-col items-center gap-2 flex-1 relative">
+                                    <div className={`status-dot z-10 ${step >= idx ? 'yogiyo-bg-pink scale-125' : 'bg-gray-200'}`}></div>
+                                    <span className={`text-[10px] ${step >= idx ? 'text-pink-600 font-bold' : 'text-gray-400'}`}>{label}</span>
+                                    {idx < 3 && (
+                                        <div className={`absolute top-[3.5px] left-1/2 w-full h-[1.5px] ${step > idx ? 'yogiyo-bg-pink' : 'bg-gray-100'}`}></div>
+                                    )}
+                                </div>
+                            ))}
                         </div>
-                    </div>
-
-                    {/* 혜택 배너 */}
-                    <div className="mx-5 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl flex items-center justify-between border border-blue-100">
-                        <div className="flex items-center space-x-3">
-                            <span className="text-lg">🎁</span>
-                            <div>
-                                <div className="text-xs text-blue-600 font-bold">이번 주문으로</div>
-                                <div className="text-sm font-bold text-gray-800">3,620원 할인 + 299원 적립</div>
-                            </div>
-                        </div>
-                        <svg className="w-4 h-4 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
-                    </div>
+                    </section>
 
                     {/* 지도 구역 */}
-                    <div className="mt-8 relative border-y border-gray-100">
+                    <div className="relative border-y border-gray-100">
                         <div id="map"></div>
-                        <div className="absolute top-4 left-4 z-[1000] bg-white px-3 py-2 rounded-lg shadow-md border text-xs font-bold flex items-center">
-                            <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-ping"></span>
-                            라이더 {formatTime(timeLeft)} 내 도착 예정
+                        <div className="absolute bottom-4 left-4 z-[1000] bg-white px-4 py-2.5 rounded-xl shadow-lg border border-gray-100 text-xs font-extrabold flex items-center gap-2">
+                            <span className="flex h-2 w-2 relative">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                            </span>
+                            실시간 위치 추적 중
                         </div>
                     </div>
 
-                    {/* 가게 및 액션 버튼 */}
-                    <div className="p-5">
-                        <div className="flex justify-between items-center mb-5">
-                            <h3 className="text-xl font-bold flex items-center">
-                                공차-홈플러스영통점
-                                <svg className="w-5 h-5 ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+                    {/* 가게 및 주문 정보 */}
+                    <div className="p-5 flex-1">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold flex items-center gap-1">
+                                공차 부산서면점
+                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"></path></svg>
                             </h3>
+                            <button className="text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg">전화하기</button>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <button className="py-3.5 border border-pink-500 text-pink-500 rounded-xl font-bold text-sm active:bg-pink-50 transition">재주문</button>
-                            <button 
-                                onClick={() => setIsModalOpen(true)}
-                                className="py-3.5 border border-gray-200 text-gray-700 rounded-xl font-bold text-sm active:bg-gray-50 transition"
-                            >
-                                문의하기
-                            </button>
-                        </div>
-                    </div>
 
-                    <div className="h-2.5 bg-gray-100"></div>
-
-                    {/* 주문 내역 정보 */}
-                    <div className="p-5 pb-24">
-                        <h4 className="font-bold text-gray-800 mb-4">주문 내역</h4>
-                        <div className="bg-gray-50 rounded-xl p-4">
-                            <div className="flex justify-between items-start mb-3">
-                                <span className="text-sm font-medium">미니펄 망고밀크 + 리얼망고 J</span>
-                                <span className="text-sm font-bold">7,600원</span>
-                            </div>
-                            <div className="text-[12px] text-gray-400 leading-relaxed mb-4">
-                                COLD: COLD / SUGAR: 50% / 수저, 포크 O
-                            </div>
-                            <hr className="border-dashed mb-4" />
-                            <div className="space-y-2">
-                                <div className="flex justify-between text-xs text-gray-500">
-                                    <span>상품금액</span>
-                                    <span>7,600원</span>
+                        <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                    <p className="font-bold text-gray-800">미니펄 망고밀크 J 외 1개</p>
+                                    <p className="text-xs text-gray-500 mt-1">당도 50% / 얼음 보통 / 펄 추가</p>
                                 </div>
+                                <span className="font-bold">12,400원</span>
+                            </div>
+                            <div className="pt-4 border-t border-gray-200 space-y-2">
                                 <div className="flex justify-between text-xs text-gray-500">
                                     <span>배달비</span>
-                                    <span className="text-blue-600 font-bold">무료 (2,000원 할인)</span>
+                                    <span className="text-blue-600 font-bold">무료배달 적용</span>
                                 </div>
-                                <div className="flex justify-between text-xs text-gray-500">
-                                    <span>포인트 사용</span>
-                                    <span className="text-red-500">-1,620원</span>
-                                </div>
-                                <div className="flex justify-between text-base font-bold text-gray-900 pt-2">
+                                <div className="flex justify-between text-sm font-black pt-1">
                                     <span>총 결제금액</span>
-                                    <span className="text-lg">5,980원</span>
+                                    <span className="text-pink-600 text-lg">10,800원</span>
                                 </div>
                             </div>
                         </div>
-                        
-                        <div className="mt-6 text-[11px] text-gray-400 leading-relaxed">
-                            주문번호: YK-2026-0215-9981<br/>
-                            주문시간: 2026.02.15 오후 02:41
-                        </div>
                     </div>
 
-                    {/* 문의하기 모달 */}
+                    {/* 하단 고정 액션 버튼 */}
+                    <div className="p-4 grid grid-cols-2 gap-3 bg-white border-t sticky bottom-0 z-[1001]">
+                        <button className="py-4 border-2 border-pink-500 text-pink-500 rounded-xl font-bold text-sm">재주문하기</button>
+                        <button 
+                            onClick={() => setIsModalOpen(true)}
+                            className="py-4 bg-gray-900 text-white rounded-xl font-bold text-sm"
+                        >
+                            문의하기
+                        </button>
+                    </div>
+
+                    {/* 문의 모달 */}
                     {isModalOpen && (
-                        <div className="fixed inset-0 z-[2000] flex items-end justify-center bg-black bg-opacity-50 px-4 pb-10">
-                            <div className="bg-white w-full max-w-md rounded-3xl p-6 animate-slide-up">
-                                <h3 className="text-lg font-bold mb-4">도움이 필요하신가요?</h3>
-                                <div className="space-y-3">
-                                    <button className="w-full text-left p-4 rounded-xl border hover:bg-gray-50 flex items-center justify-between">
-                                        <span>가게로 전화하기</span>
-                                        <span className="text-pink-500 text-sm font-bold underline">031-123-4567</span>
+                        <div className="fixed inset-0 z-[2000] flex items-end justify-center bg-black/60 px-4 pb-8 backdrop-blur-sm">
+                            <div className="bg-white w-full max-w-md rounded-[32px] p-8 animate-slide-up shadow-2xl">
+                                <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-8"></div>
+                                <h3 className="text-2xl font-black mb-6">어떤 도움이<br/>필요하신가요?</h3>
+                                <div className="grid grid-cols-1 gap-3">
+                                    <button className="w-full text-left p-5 rounded-2xl bg-gray-50 hover:bg-gray-100 flex items-center justify-between group">
+                                        <div>
+                                            <p className="font-bold text-gray-800">가게로 직접 연락</p>
+                                            <p className="text-xs text-gray-500 mt-0.5 font-medium">조리 상태나 옵션 변경 문의</p>
+                                        </div>
+                                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:bg-pink-500 group-hover:text-white transition-colors">📞</div>
                                     </button>
-                                    <button className="w-full text-left p-4 rounded-xl border hover:bg-gray-50 flex items-center justify-between">
-                                        <span>고객센터 1:1 채팅문의</span>
-                                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+                                    <button className="w-full text-left p-5 rounded-2xl bg-gray-50 hover:bg-gray-100 flex items-center justify-between group">
+                                        <div>
+                                            <p className="font-bold text-gray-800">고객센터 채팅상담</p>
+                                            <p className="text-xs text-gray-500 mt-0.5 font-medium">배달 지연 및 결제 문의</p>
+                                        </div>
+                                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:bg-pink-500 group-hover:text-white transition-colors">💬</div>
                                     </button>
                                 </div>
                                 <button 
                                     onClick={() => setIsModalOpen(false)}
-                                    className="w-full mt-6 py-4 bg-gray-900 text-white rounded-xl font-bold"
+                                    className="w-full mt-8 py-4 bg-gray-100 text-gray-500 rounded-2xl font-bold"
                                 >
                                     닫기
                                 </button>
@@ -245,11 +217,11 @@
                         </div>
                     )}
 
-                    {/* 관리 도구 (데모용 상태 제어) */}
-                    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[3000] bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-2xl border flex space-x-4">
-                        <button onClick={() => setStep(0)} className={`text-[10px] font-bold ${step === 0 ? 'text-pink-500' : 'text-gray-400'}`}>조리</button>
-                        <button onClick={() => setStep(1)} className={`text-[10px] font-bold ${step === 1 ? 'text-pink-500' : 'text-gray-400'}`}>배달</button>
-                        <button onClick={() => setStep(3)} className={`text-[10px] font-bold ${step === 3 ? 'text-pink-500' : 'text-gray-400'}`}>완료</button>
+                    {/* 데모용 제어 패널 */}
+                    <div className="fixed top-20 right-4 z-[2000] flex flex-col gap-2 scale-75 origin-right">
+                        <button onClick={() => setStep(0)} className="bg-white/90 p-3 rounded-full shadow-lg font-bold text-xs border border-gray-200">조리</button>
+                        <button onClick={() => setStep(1)} className="bg-white/90 p-3 rounded-full shadow-lg font-bold text-xs border border-gray-200">배달</button>
+                        <button onClick={() => setStep(3)} className="bg-white/90 p-3 rounded-full shadow-lg font-bold text-xs border border-gray-200 text-pink-500">완료</button>
                     </div>
                 </div>
             );
