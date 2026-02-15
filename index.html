@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>배달 데모 - 부산 서면점</title>
+    <title>Waze 배달 데모 - 부산 서면</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -12,14 +12,21 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <style>
-        body { font-family: 'Pretendard', sans-serif; background-color: #f1f3f5; margin: 0; }
-        .yogiyo-pink { color: #FA0050; }
-        .yogiyo-bg-pink { background-color: #FA0050; }
-        #map { height: 320px; width: 100%; filter: grayscale(0.2) contrast(1.1); }
-        .rider-emoji { font-size: 28px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); transition: all 0.5s linear; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; transition: all 0.3s ease; }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .animate-slide-up { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        body { font-family: 'Pretendard', sans-serif; background-color: #f1f3f5; }
+        #map { height: 350px; width: 100%; border-radius: 0 0 2rem 2rem; }
+        .waze-blue { background-color: #33CCFF; }
+        .waze-shadow { box-shadow: 0 10px 25px -5px rgba(51, 204, 255, 0.3); }
+        /* 라이더 말풍선 애니메이션 */
+        .rider-popup {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        /* 커스텀 스크롤바 제거 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body>
@@ -29,199 +36,156 @@
         const { useState, useEffect, useRef } = React;
 
         const DeliveryApp = () => {
-            // 부산 서면역 중심 좌표: 35.158, 129.059
-            const DEST_COORDS = [35.158, 129.059]; // 도착지 (서면역)
-            const START_COORDS = [35.153, 129.065]; // 출발지 (전포동 공차)
-
+            // 위치: 부산 서면
+            const DEST = [35.158, 129.059]; // 내 위치 (서면역)
+            const START = [35.150, 129.068]; // 가게 위치 (범냇골 인근)
+            
             const [step, setStep] = useState(1);
-            const [timeLeft, setTimeLeft] = useState(12 * 60);
-            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [likes, setLikes] = useState(124);
+            const [timeLeft, setTimeLeft] = useState(680); // 초 단위
+            const [isTipActive, setIsTipActive] = useState(false);
+            const [riderMsg, setRiderMsg] = useState("안전하게 배달 중입니다!");
+            
             const mapRef = useRef(null);
-            const riderMarkerRef = useRef(null);
+            const riderRef = useRef(null);
 
-            // 타이머 작동
-            useEffect(() => {
-                const timer = setInterval(() => {
-                    setTimeLeft(prev => (prev > 0 ? prev - 1 : 0));
-                }, 1000);
-                return () => clearInterval(timer);
-            }, []);
-
-            // 지도 초기화 (부산 서면)
             useEffect(() => {
                 if (!mapRef.current) {
-                    mapRef.current = L.map('map', { 
-                        zoomControl: false,
-                        attributionControl: false 
-                    }).setView(START_COORDS, 15);
-                    
+                    // Waze 스타일의 밝은 지도를 위해 배경색과 필터 조정
+                    mapRef.current = L.map('map', { zoomControl: false }).setView(DEST, 15);
                     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(mapRef.current);
 
-                    // 도착지 마커 (내 위치)
+                    // 목적지 (Waze 스타일 핀)
                     const homeIcon = L.divIcon({
-                        html: `<div class="relative"><div class="absolute -top-2 -left-2 w-8 h-8 bg-pink-500/20 rounded-full animate-ping"></div><div class="bg-white p-1 rounded-full shadow-md border-2 border-pink-500 relative z-10"><div class="w-3 h-3 bg-pink-500 rounded-full"></div></div></div>`,
+                        html: `<div class="relative w-10 h-10 flex items-center justify-center">
+                                <div class="absolute inset-0 bg-white rounded-full shadow-lg border-4 border-blue-400"></div>
+                                <span class="relative text-lg">🏠</span>
+                               </div>`,
                         className: ''
                     });
-                    L.marker(DEST_COORDS, { icon: homeIcon }).addTo(mapRef.current);
+                    L.marker(DEST, { icon: homeIcon }).addTo(mapRef.current);
 
-                    // 라이더 마커
+                    // 라이더 (Waze 스타일 무드)
                     const riderIcon = L.divIcon({
-                        html: `<div class="rider-emoji">🛵</div>`,
+                        html: `<div class="rider-popup relative">
+                                <div class="bg-black text-white text-[10px] px-2 py-1 rounded-full absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap">배달중</div>
+                                <div class="text-3xl">🚙</div>
+                               </div>`,
                         className: ''
                     });
-                    riderMarkerRef.current = L.marker(START_COORDS, { icon: riderIcon }).addTo(mapRef.current);
+                    riderRef.current = L.marker(START, { icon: riderIcon }).addTo(mapRef.current);
                 }
 
-                // 라이더 이동 시뮬레이션 (서면역 방향으로)
                 if (step === 1) {
-                    let progress = 0;
-                    const moveInterval = setInterval(() => {
-                        progress += 0.005;
-                        if (progress <= 1) {
-                            const currentLat = START_COORDS[0] + (DEST_COORDS[0] - START_COORDS[0]) * progress;
-                            const currentLng = START_COORDS[1] + (DEST_COORDS[1] - START_COORDS[1]) * progress;
-                            riderMarkerRef.current.setLatLng([currentLat, currentLng]);
+                    let p = 0;
+                    const interval = setInterval(() => {
+                        p += 0.002;
+                        if (p <= 1) {
+                            const lat = START[0] + (DEST[0] - START[0]) * p;
+                            const lng = START[1] + (DEST[1] - START[1]) * p;
+                            riderRef.current.setLatLng([lat, lng]);
                         }
                     }, 1000);
-                    return () => clearInterval(moveInterval);
+                    return () => clearInterval(interval);
                 }
             }, [step]);
 
-            const getArrivalLabel = () => {
-                const now = new Date();
-                now.setSeconds(now.getSeconds() + timeLeft);
-                const hours = now.getHours() > 12 ? `오후 ${now.getHours()-12}` : `오전 ${now.getHours()}`;
-                return `${hours}:${String(now.getMinutes()).padStart(2, '0')} 도착 예정`;
-            };
-
             return (
-                <div className="max-w-[480px] mx-auto bg-white min-h-screen shadow-xl relative flex flex-col">
-                    {/* 상단바 */}
-                    <header className="p-4 flex items-center border-b sticky top-0 bg-white z-[1001]">
-                        <button className="p-1 text-gray-700"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7"></path></svg></button>
-                        <h1 className="flex-1 text-center font-bold text-lg pr-8">주문 현황</h1>
-                    </header>
-
-                    {/* 상태 정보 */}
-                    <section className="p-6">
-                        <div className="flex justify-between items-start">
-                            <div className="space-y-1">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded bg-gray-100 text-[11px] font-bold text-gray-600">실속배달</span>
-                                <h2 className="text-2xl font-black tracking-tight">{getArrivalLabel()}</h2>
-                                <p className="text-gray-500 text-sm font-medium">
-                                    {step === 0 ? "정성껏 음식을 준비하고 있어요" : "라이더님이 서면역 인근에서 이동 중입니다"}
-                                </p>
-                            </div>
-                            <div className="w-14 h-14 bg-pink-50 rounded-2xl flex items-center justify-center text-3xl">
-                                {step === 0 ? "🍳" : "🛵"}
+                <div className="max-w-[480px] mx-auto bg-white min-h-screen relative overflow-hidden flex flex-col no-scrollbar">
+                    {/* Waze 헤더 스타일 */}
+                    <div id="map" className="relative shadow-inner">
+                        <div className="absolute top-6 left-4 right-4 z-[1000] flex justify-between items-start">
+                            <button className="bg-white/90 backdrop-blur p-3 rounded-2xl shadow-xl">
+                                <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7"></path></svg>
+                            </button>
+                            <div className="bg-white/95 backdrop-blur px-6 py-3 rounded-3xl shadow-2xl flex items-center gap-3 border border-blue-50">
+                                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                <span className="font-black text-gray-800 text-sm tracking-tight uppercase">On Schedule</span>
                             </div>
                         </div>
+                    </div>
 
-                        {/* 프로그레스 스텝 */}
-                        <div className="mt-8 flex items-center justify-between px-2">
-                            {['주문완료', '조리중', '배달중', '완료'].map((label, idx) => (
-                                <div key={label} className="flex flex-col items-center gap-2 flex-1 relative">
-                                    <div className={`status-dot z-10 ${step >= idx ? 'yogiyo-bg-pink scale-125' : 'bg-gray-200'}`}></div>
-                                    <span className={`text-[10px] ${step >= idx ? 'text-pink-600 font-bold' : 'text-gray-400'}`}>{label}</span>
-                                    {idx < 3 && (
-                                        <div className={`absolute top-[3.5px] left-1/2 w-full h-[1.5px] ${step > idx ? 'yogiyo-bg-pink' : 'bg-gray-100'}`}></div>
-                                    )}
+                    {/* 배달 정보 메인 카드 (올라오는 스타일) */}
+                    <div className="flex-1 bg-white -mt-12 rounded-t-[3rem] relative z-[1001] px-8 pt-10 pb-20 shadow-[0_-20px_40px_rgba(0,0,0,0.05)]">
+                        <div className="flex justify-between items-end mb-8">
+                            <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="waze-blue text-white text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-widest">Express</span>
+                                    <span className="text-gray-400 font-bold text-[11px]">서면역 7번 출구 방면</span>
                                 </div>
+                                <h2 className="text-4xl font-black text-gray-900 leading-tight">
+                                    {Math.floor(timeLeft / 60)}<span className="text-xl ml-1">min</span>
+                                </h2>
+                                <p className="text-gray-500 font-semibold mt-1">곧 현관 앞에 도착합니다!</p>
+                            </div>
+                            <button 
+                                onClick={() => setLikes(l => l + 1)}
+                                className="flex flex-col items-center group active:scale-95 transition"
+                            >
+                                <div className="w-14 h-14 bg-pink-50 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-pink-100 transition-colors">👍</div>
+                                <span className="text-[10px] font-black mt-2 text-gray-400 uppercase tracking-tighter">{likes} Cheer up</span>
+                            </button>
+                        </div>
+
+                        {/* 라이더와의 실시간 소통 기능 추가 */}
+                        <div className="bg-gray-50 rounded-3xl p-4 mb-8 flex items-center gap-4 border border-gray-100">
+                            <div className="w-12 h-12 bg-blue-100 rounded-full overflow-hidden border-2 border-white shadow-sm flex items-center justify-center text-xl">🤴</div>
+                            <div className="flex-1">
+                                <p className="text-[11px] font-black text-blue-500 uppercase tracking-wider mb-0.5">Rider Message</p>
+                                <input 
+                                    className="bg-transparent border-none text-sm font-bold text-gray-800 focus:outline-none w-full"
+                                    value={riderMsg}
+                                    onChange={(e) => setRiderMsg(e.target.value)}
+                                />
+                            </div>
+                            <button className="bg-white p-2 rounded-xl shadow-sm"><svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path></svg></button>
+                        </div>
+
+                        {/* 팁 전달 버튼 (기능 추가) */}
+                        <div className="flex gap-4 mb-8 overflow-x-auto no-scrollbar pb-2">
+                            {['🥤 감사 음료', '🍰 달콤한 간식', '🏠 벨 안누르기', '🚲 안전운전'].map(item => (
+                                <button key={item} className="whitespace-nowrap bg-white border-2 border-gray-100 px-4 py-2.5 rounded-2xl text-xs font-bold text-gray-600 hover:border-blue-300 hover:text-blue-500 transition-all active:scale-95 shadow-sm">
+                                    {item}
+                                </button>
                             ))}
                         </div>
-                    </section>
 
-                    {/* 지도 구역 */}
-                    <div className="relative border-y border-gray-100">
-                        <div id="map"></div>
-                        <div className="absolute bottom-4 left-4 z-[1000] bg-white px-4 py-2.5 rounded-xl shadow-lg border border-gray-100 text-xs font-extrabold flex items-center gap-2">
-                            <span className="flex h-2 w-2 relative">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                            </span>
-                            실시간 위치 추적 중
-                        </div>
-                    </div>
-
-                    {/* 가게 및 주문 정보 */}
-                    <div className="p-5 flex-1">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold flex items-center gap-1">
-                                공차 부산서면점
-                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"></path></svg>
-                            </h3>
-                            <button className="text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg">전화하기</button>
-                        </div>
-
-                        <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <p className="font-bold text-gray-800">미니펄 망고밀크 J 외 1개</p>
-                                    <p className="text-xs text-gray-500 mt-1">당도 50% / 얼음 보통 / 펄 추가</p>
-                                </div>
-                                <span className="font-bold">12,400원</span>
+                        {/* 주문 요약 아코디언 느낌 */}
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                                <h3 className="font-black text-gray-900">주문 내역</h3>
+                                <span className="text-xs font-bold text-blue-500">상세보기</span>
                             </div>
-                            <div className="pt-4 border-t border-gray-200 space-y-2">
-                                <div className="flex justify-between text-xs text-gray-500">
-                                    <span>배달비</span>
-                                    <span className="text-blue-600 font-bold">무료배달 적용</span>
+                            <div className="bg-blue-50/50 rounded-3xl p-6 border border-blue-100/50">
+                                <div className="flex justify-between mb-4">
+                                    <span className="font-bold text-gray-700">공차 망고 스무디 J x 1</span>
+                                    <span className="font-black text-gray-900">7,200원</span>
                                 </div>
-                                <div className="flex justify-between text-sm font-black pt-1">
-                                    <span>총 결제금액</span>
-                                    <span className="text-pink-600 text-lg">10,800원</span>
+                                <div className="flex justify-between text-sm">
+                                    <span className="font-bold text-gray-400">Total Discount</span>
+                                    <span className="font-bold text-pink-500">-2,400원</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* 하단 고정 액션 버튼 */}
-                    <div className="p-4 grid grid-cols-2 gap-3 bg-white border-t sticky bottom-0 z-[1001]">
-                        <button className="py-4 border-2 border-pink-500 text-pink-500 rounded-xl font-bold text-sm">재주문하기</button>
-                        <button 
-                            onClick={() => setIsModalOpen(true)}
-                            className="py-4 bg-gray-900 text-white rounded-xl font-bold text-sm"
-                        >
-                            문의하기
+                    {/* 하단 플로팅 액션 바 */}
+                    <div className="fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto p-6 bg-white/80 backdrop-blur-xl border-t border-gray-100 z-[1002] flex gap-4">
+                        <button className="flex-1 py-5 waze-blue text-white rounded-3xl font-black text-sm waze-shadow active:scale-95 transition-transform uppercase tracking-widest">
+                            Order Support
+                        </button>
+                        <button className="w-20 py-5 bg-gray-100 text-gray-500 rounded-3xl font-black text-sm flex items-center justify-center active:scale-95 transition-transform">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
                         </button>
                     </div>
 
-                    {/* 문의 모달 */}
-                    {isModalOpen && (
-                        <div className="fixed inset-0 z-[2000] flex items-end justify-center bg-black/60 px-4 pb-8 backdrop-blur-sm">
-                            <div className="bg-white w-full max-w-md rounded-[32px] p-8 animate-slide-up shadow-2xl">
-                                <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-8"></div>
-                                <h3 className="text-2xl font-black mb-6">어떤 도움이<br/>필요하신가요?</h3>
-                                <div className="grid grid-cols-1 gap-3">
-                                    <button className="w-full text-left p-5 rounded-2xl bg-gray-50 hover:bg-gray-100 flex items-center justify-between group">
-                                        <div>
-                                            <p className="font-bold text-gray-800">가게로 직접 연락</p>
-                                            <p className="text-xs text-gray-500 mt-0.5 font-medium">조리 상태나 옵션 변경 문의</p>
-                                        </div>
-                                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:bg-pink-500 group-hover:text-white transition-colors">📞</div>
-                                    </button>
-                                    <button className="w-full text-left p-5 rounded-2xl bg-gray-50 hover:bg-gray-100 flex items-center justify-between group">
-                                        <div>
-                                            <p className="font-bold text-gray-800">고객센터 채팅상담</p>
-                                            <p className="text-xs text-gray-500 mt-0.5 font-medium">배달 지연 및 결제 문의</p>
-                                        </div>
-                                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:bg-pink-500 group-hover:text-white transition-colors">💬</div>
-                                    </button>
-                                </div>
-                                <button 
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="w-full mt-8 py-4 bg-gray-100 text-gray-500 rounded-2xl font-bold"
-                                >
-                                    닫기
-                                </button>
-                            </div>
+                    {/* 데모용 제어 패널 (수정) */}
+                    <div className="fixed top-32 right-4 z-[2000] flex flex-col gap-3">
+                        <div className="bg-black/90 text-white p-2 rounded-2xl flex flex-col gap-2 shadow-2xl scale-75 origin-right">
+                             <button onClick={() => setStep(0)} className={`p-2 rounded-xl text-[10px] font-bold ${step===0?'bg-white text-black':''}`}>PREPARING</button>
+                             <button onClick={() => setStep(1)} className={`p-2 rounded-xl text-[10px] font-bold ${step===1?'bg-white text-black':''}`}>DRIVING</button>
+                             <button onClick={() => setStep(2)} className={`p-2 rounded-xl text-[10px] font-bold ${step===2?'bg-white text-black':''}`}>ARRIVED</button>
                         </div>
-                    )}
-
-                    {/* 데모용 제어 패널 */}
-                    <div className="fixed top-20 right-4 z-[2000] flex flex-col gap-2 scale-75 origin-right">
-                        <button onClick={() => setStep(0)} className="bg-white/90 p-3 rounded-full shadow-lg font-bold text-xs border border-gray-200">조리</button>
-                        <button onClick={() => setStep(1)} className="bg-white/90 p-3 rounded-full shadow-lg font-bold text-xs border border-gray-200">배달</button>
-                        <button onClick={() => setStep(3)} className="bg-white/90 p-3 rounded-full shadow-lg font-bold text-xs border border-gray-200 text-pink-500">완료</button>
                     </div>
                 </div>
             );
