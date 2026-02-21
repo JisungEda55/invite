@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Yandex 날씨 - 서울</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacOSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(to bottom, #e0f7fa, #ffffff);
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      margin-bottom: 0.4em;
+      color: #01579b;
+    }
+    .container {
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 4px 25px rgba(0,0,0,0.12);
+      border-radius: 16px;
+      overflow: hidden;
+      background: white;
+    }
+    iframe {
+      width: 100%;
+      height: 620px;
+      border: none;
+    }
+    footer {
+      margin-top: 1.5rem;
+      font-size: 0.82rem;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>서울 날씨 ☀️🌧️</h1>
+  
+  <div class="container">
+    <!-- 서울의 Yandex 날씨 인포그래픽 (lang=ko로 한국어 표시) -->
+    <iframe 
+      src="https://yandex.ru/pogoda/seoul/informer?lang=ko&amp;via=iframe"
+      scrolling="no"
+      title="Yandex Погода — 서울">
+    </iframe>
+  </div>
+
+  <footer>
+    데이터 출처: Yandex.Погода • 실시간 갱신 • API 키 없이 사용 가능합니다 ✓
+  </footer>
+
+</body>
+</html>
