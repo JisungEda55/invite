@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>삼성닷컴 | 삼성전자 공식 온라인숍</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+            color: #000;
+            line-height: 1.5;
+        }
+        .header {
+            padding: 10px;
+            background-color: #fff;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            font-size: 14px;
+            color: #333;
+        }
+        .rating {
+            padding: 10px;
+            font-size: 14px;
+            color: #333;
+        }
+        .product-image {
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            display: block;
+        }
+        .product-title {
+            padding: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .color-section {
+            padding: 10px;
+            text-align: center;
+        }
+        .color-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #ffd700;
+            display: inline-block;
+            margin: 0 5px;
+        }
+        .quantity-section {
+            padding: 10px;
+            text-align: center;
+        }
+        .quantity-input {
+            width: 50px;
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 5px;
+        }
+        .buy-button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            display: block;
+            margin: 10px auto;
+        }
+        .price {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 10px;
+        }
+        .description-section {
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .feature-title {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .feature-image {
+            width: 100%;
+            max-width: 300px;
+            margin: 10px auto;
+            display: block;
+        }
+        .specs {
+            padding: 10px;
+            border-top: 1px solid #eee;
+            cursor: pointer;
+        }
+        .specs-content {
+            display: none;
+            padding: 10px;
+        }
+        .reviews {
+            padding: 20px;
+        }
+        .review-star {
+            color: #ffd700;
+        }
+        .review-item {
+            border-bottom: 1px solid #eee;
+            padding: 10px;
+        }
+        .review-image {
+            width: 50px;
+            height: 50px;
+            background-color: #eee;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .accordion {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        삼성닷컴 | 삼성전자 공식 온라인숍
+    </div>
+    <div class="rating">
+        ★★★★★ 5.0 (1)
+    </div>
+    <img class="product-image" src="https://via.placeholder.com/300x200?text=Product+Image" alt="비스포크 버즈4 1세대 Z폴드/플립 케이스 (초코볼)">
+    <div class="product-title">
+        비스포크 버즈4 1세대 Z폴드/플립 케이스 (초코볼)
+    </div>
+    <div class="color-section">
+        색상
+        <div class="color-dot"></div>
+        황색
+    </div>
+    <div class="quantity-section">
+        수량
+        <input type="number" class="quantity-input" value="1" min="1">
+    </div>
+    <button class="buy-button">구매하기</button>
+    <div class="price">
+        36,800 원 ❤️
+    </div>
+    <div class="description-section">
+        <div class="feature-title">
+            갤럭시 버즈4 1세대 Z폴드/플립 케이스 (초코볼) 소개합니다
+        </div>
+        <p>SOIDS 다만하는 초코볼 디자인의 케이스입니다. 귀여운 초코볼이 포인트가 되는 디자인으로, 매일 사용하는 케이스를 특별하게 만들어줍니다.</p>
+        <img class="feature-image" src="https://via.placeholder.com/300x200?text=Feature+Image+1" alt="초코볼 디자인">
+        <div class="feature-title">
+            사용법 간단 페어링 한 번
+        </div>
+        <p>LED 등으로 충전 상태 확인. 스마트폰과 페어링 한 번으로 간단하게 사용하세요.</p>
+        <img class="feature-image" src="https://via.placeholder.com/300x200?text=LED+Image" alt="LED 표시">
+        <div class="feature-title">
+            사용 중, 케이스 자석으로 개폐 편리
+        </div>
+        <p>케이스를 열고 닫기 쉽습니다. 자석 방식으로 안정적입니다.</p>
+        <img class="feature-image" src="https://via.placeholder.com/300x200?text=Open+Case" alt="케이스 개폐">
+        <!-- 더 많은 설명 텍스트 추가 -->
+        <p>이 제품은 고품질 재료로 제작되었으며, Z폴드/플립에 완벽하게 맞습니다. 초코볼 디자인은 귀여움을 더해줍니다.</p>
+    </div>
+    <div class="specs accordion" onclick="toggleContent(this)">
+        스펙 ▼
+    </div>
+    <div class="specs-content">
+        <p>제품명: 비스포크 버즈4 1세대 Z폴드/플립 케이스 (초코볼)</p>
+        <p>색상: 황색</p>
+        <p>가격: 36,800 원</p>
+        <p>기타: LED 표시, 자석 개폐 등</p>
+    </div>
+    <div class="reviews">
+        <div class="feature-title">상세평</div>
+        <div class="review-star">★★★★★ 5.0</div>
+        <p>이 상품에 대한 리뷰는 1건입니다.</p>
+        <!-- 리뷰 바 그래프 -->
+        <div style="background-color: #eee; height: 20px; width: 100%; margin: 10px 0;"></div>
+        <div class="review-item">
+            <div class="review-star">★★★★★</div>
+            <p>2026-03-05</p>
+            <p>아주 귀엽고 좋습니다. Z폴드에 딱 맞아요!</p>
+            <div class="review-image"></div>
+        </div>
+        <!-- 더 많은 리뷰 추가, 스크린샷에 맞게 7-8개 -->
+        <div class="review-item">
+            <div class="review-star">★★★★★</div>
+            <p>2026-03-04</p>
+            <p>초코볼 디자인이 너무 귀여워요. 추천합니다.</p>
+            <div class="review-image"></div>
+        </div>
+        <div class="review-item">
+            <div class="review-star">★★★★★</div>
+            <p>2026-03-03</p>
+            <p>품질이 우수하고 배송이 빠릅니다.</p>
+            <div class="review-image"></div>
+        </div>
+        <!-- 계속 추가 -->
+    </div>
+    <script>
+        function toggleContent(element) {
+            var content = element.nextElementSibling;
+            if (content.style.display === "block") {
+                content.style.display = "none";
+            } else {
+                content.style.display = "block";
+            }
+        }
+
+        // 수량 변경 시 가격 업데이트 (옵션, 실제 페이지에 맞게)
+        document.querySelector('.quantity-input').addEventListener('change', function() {
+            var quantity = this.value;
+            var price = 36800 * quantity;
+            document.querySelector('.price').innerText = price.toLocaleString() + ' 원 ❤️';
+        });
+    </script>
+</body>
+</html>
