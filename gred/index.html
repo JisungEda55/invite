@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5:4 Instagram Card Maker (Apple 스타일)</title>
+  <!-- Font Awesome 무료 아이콘 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- html2canvas (이미지 변환 라이브러리) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #111;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #canvas-container {
+      width: 500px;
+      height: 400px;               /* 5:4 비율 */
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 12px;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    /* 모바일 대응 - 비율 유지 */
+    @media (max-width: 600px) {
+      #canvas-container {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 5 / 4;
+      }
+    }
+    .item {
+      background: rgba(255,255,255,0.08);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+      overflow: hidden;
+    }
+    /* 예시 위치별 스타일 (원하시는 대로 자유롭게 수정하세요) */
+    .item.logo       { grid-column: 1 / 3; grid-row: 1; font-size: 2.4rem; }
+    .item.graph      { grid-column: 3 / 5; grid-row: 1 / 3; background: rgba(0,120,255,0.15); }
+    .item.big-text   { grid-column: 1 / 5; grid-row: 2; font-size: 3.2rem; font-weight: 800; letter-spacing: -1px; }
+    .item.stats      { grid-column: 1 / 3; grid-row: 3; flex-direction: column; font-size: 1.4rem; }
+    .item.icon-big   { grid-column: 3 / 5; grid-row: 3; font-size: 5rem; color: #0f0; }
+    .neon-text {
+      background: linear-gradient(90deg, #00ffea, #00ff9d);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    button {
+      margin-top: 24px;
+      padding: 14px 32px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      background: linear-gradient(45deg, #007aff, #00c6ff);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0,122,255,0.4);
+      transition: all 0.2s;
+    }
+    button:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,122,255,0.5); }
+    h1 { margin: 20px 0; font-size: 1.6rem; opacity: 0.9; }
+  </style>
+</head>
+<body>
+
+  <h1>5:4 Instagram 카드 제작 도구</h1>
+
+  <div id="canvas-container">
+    <!-- 자유롭게 item 위치·내용·스타일 변경 가능 -->
+    <div class="item logo neon-text">Volume</div>
+    
+    <div class="item graph">
+      <div style="text-align:center;">
+        <div>Immersion levels</div>
+        <div style="font-size:3rem; margin:10px 0;">0.42</div>
+        <div>Surrounding effect</div>
+      </div>
+    </div>
+    
+    <div class="item big-text">SwiftUI</div>
+    
+    <div class="item stats">
+      <div>BASEPLATE</div>
+      <div style="font-size:2.2rem; margin:8px 0;">Visibility</div>
+      <i class="fas fa-eye" style="font-size:2.5rem; margin-top:8px;"></i>
+    </div>
+    
+    <div class="item icon-big">
+      <i class="fas fa-cube"></i>
+    </div>
+  </div>
+
+  <button onclick="exportToNewTab()">사진 새 탭에 열기 (iPhone 길게 눌러 저장)</button>
+
+  <script>
+    function exportToNewTab() {
+      const element = document.getElementById('canvas-container');
+      
+      html2canvas(element, {
+        scale: 3,                     // 해상도 향상 (고화질)
+        useCORS: true,                // 외부 이미지 허용
+        backgroundColor: null,
+        logging: false
+      }).then(canvas => {
+        const dataURL = canvas.toDataURL('image/png', 1.0);
+        // 새 탭에 이미지 열기
+        const newWindow = window.open();
+        if (newWindow) {
+          newWindow.document.write(`
+            <html>
+              <head><title>저장할 이미지</title></head>
+              <body style="margin:0; background:#000; display:flex; align-items:center; justify-content:center; height:100vh;">
+                <img src="${dataURL}" style="max-width:100%; max-height:100%; object-fit:contain;">
+                <p style="position:absolute; bottom:20px; color:#aaa; font-family:sans-serif;">
+                  길게 눌러 사진에 저장하세요
+                </p>
+              </body>
+            </html>
+          `);
+        } else {
+          alert('팝업 차단이 설정되어 있습니다.\n팝업 허용 후 다시 시도해 주세요.');
+        }
+      }).catch(err => {
+        console.error('캡처 오류:', err);
+        alert('이미지 생성 중 오류가 발생했습니다.');
+      });
+    }
+  </script>
+
+</body>
+</html>
